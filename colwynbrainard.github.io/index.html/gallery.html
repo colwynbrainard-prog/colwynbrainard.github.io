@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photography Gallery | Colwyn Brainard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --paper:#f7f3e8;
+  --ink:#000;
+  --yellow:#efff00;
+  --shadow:6px 6px 0 #000;
+}
+
+* { box-sizing:border-box; }
+
+body {
+  margin:0;
+  font-family:Inter, sans-serif;
+  background:var(--paper);
+  background-image:
+    linear-gradient(#00000010 1px, transparent 1px),
+    linear-gradient(90deg,#00000010 1px,transparent 1px);
+  background-size:20px 20px;
+  color:var(--ink);
+}
+
+header {
+  padding:1rem;
+  border-bottom:4px solid black;
+  background:var(--paper);
+}
+
+a { color:black; text-decoration:none; }
+
+.back,
+.view-btn {
+  border:3px solid black;
+  padding:.55rem .9rem;
+  background:white;
+  box-shadow:4px 4px 0 black;
+  font-weight:900;
+  text-transform:uppercase;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.view-btn.active { background:var(--yellow); }
+
+h1 {
+  font-family:Space Grotesk, sans-serif;
+  font-size:clamp(3rem, 9vw, 6rem);
+  margin:1rem;
+  text-transform:uppercase;
+  letter-spacing:-.06em;
+}
+
+.intro {
+  margin:1rem;
+  border:4px solid black;
+  background:white;
+  box-shadow:var(--shadow);
+  padding:1rem;
+  font-weight:800;
+}
+
+.controls {
+  display:flex;
+  gap:.75rem;
+  flex-wrap:wrap;
+  margin:1rem;
+}
+
+.gallery.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.25rem;
+  padding:1rem;
+}
+
+.gallery.list {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1rem;
+  padding:1rem;
+}
+
+.gallery.list .photo {
+  display:grid;
+  grid-template-columns:260px 1fr;
+}
+
+.gallery.list .photo img {
+  height:180px;
+}
+
+.photo {
+  border:4px solid black;
+  background:white;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  cursor:pointer;
+}
+
+.photo img {
+  width:100%;
+  height:240px;
+  object-fit:cover;
+  object-position:center;
+  border-bottom:4px solid black;
+}
+
+.caption {
+  padding:.75rem;
+  font-weight:900;
+  text-transform:uppercase;
+  font-size:.9rem;
+}
+
+.date {
+  display:block;
+  margin-top:.25rem;
+  font-size:.75rem;
+  color:#444;
+}
+
+.lightbox {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.88);
+  z-index:99;
+  align-items:center;
+  justify-content:center;
+  padding:2rem;
+}
+
+.lightbox.active { display:flex; }
+
+.lightbox-content {
+  max-width:90vw;
+  max-height:90vh;
+  background:white;
+  border:4px solid black;
+  box-shadow:6px 6px 0 black;
+}
+
+.lightbox img {
+  max-width:90vw;
+  max-height:78vh;
+  object-fit:contain;
+}
+
+.lightbox-title {
+  padding:.75rem 1rem;
+  font-weight:900;
+  text-transform:uppercase;
+  border-top:4px solid black;
+}
+
+.close,
+.arrow {
+  position:fixed;
+  background:white;
+  border:4px solid black;
+  box-shadow:4px 4px 0 black;
+  font-weight:900;
+  font-size:1.5rem;
+  padding:.4rem .8rem;
+  cursor:pointer;
+}
+
+.close {
+  top:1rem;
+  right:1rem;
+}
+
+.arrow.prev {
+  left:1rem;
+  top:50%;
+}
+
+.arrow.next {
+  right:1rem;
+  top:50%;
+}
+
+@media(max-width:700px) {
+  .gallery.list .photo {
+    grid-template-columns:1fr;
+  }
+
+  .gallery.list .photo img {
+    height:220px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <a class="back" href="./index.html">← Back</a>
+</header>
+
+<h1>Gallery</h1>
+
+<div class="intro">
+  A selected photography gallery exploring architecture, landscape, portraiture, texture, and visual composition. Shot on Digital Canon EOS Rebel T5.
+</div>
+
+<div class="controls">
+  <button class="view-btn active" onclick="setView('grid', this)">Grid View</button>
+  <button class="view-btn" onclick="setView('list', this)">List View</button>
+</div>
+
+<div class="gallery grid" id="gallery"></div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="close">×</button>
+  <button class="arrow prev" onclick="event.stopPropagation(); changeImage(-1)">←</button>
+  <button class="arrow next" onclick="event.stopPropagation(); changeImage(1)">→</button>
+
+  <div class="lightbox-content" onclick="event.stopPropagation(); changeImage(1)">
+    <img id="lightbox-img" src="" alt="">
+    <div class="lightbox-title" id="lightbox-title"></div>
+  </div>
+</div>
+
+<script>
+const photos = [
+  ["sky-orchard.jpg", "Sky Orchard", "January 2026"],
+  ["spiked-bloom.jpg", "Spiked Bloom", "January 2026"],
+  ["blue-repetition.jpg", "Blue Repetition", "January 2026"],
+  ["quiet-edge.jpg", "Quiet Edge", "January 2026"],
+
+  ["the-cabinet.jpg", "The Cabinet", "February 2026"],
+  ["dark-room-still.jpg", "Dark Room Still", "February 2026"],
+  ["wallflower-rebel.jpg", "Wallflower Rebel", "February 2026"],
+  ["mint-barrier.jpg", "Mint Barrier", "February 2026"],
+  ["fogline.jpg", "Fogline", "February 2026"],
+
+  ["after-the-bouquet.jpg", "After the Bouquet", "March 2026"],
+  ["blue-devotion.jpg", "Blue Devotion", "March 2026"],
+  ["look-left.jpg", "Look Left", "March 2026"],
+  ["vertical-weather.jpg", "Vertical Weather", "March 2026"],
+  ["low-angle-study.jpg", "Low Angle Study", "March 2026"],
+  ["glass-cathedral.jpg", "Glass Cathedral", "March 2026"],
+  ["descending-pattern.jpg", "Descending Pattern", "March 2026"],
+
+  ["fenced-sky.jpg", "Fenced Sky", "April 2026"],
+  ["stone-upward.jpg", "Stone Upward", "April 2026"],
+  ["threshold.jpg", "Threshold", "April 2026"],
+  ["wishbone.jpg", "Wishbone", "April 2026"]
+];
+
+let currentIndex = 0;
+const gallery = document.getElementById("gallery");
+
+photos.forEach((photo, index) => {
+  const card = document.createElement("div");
+  card.className = "photo";
+  card.onclick = () => openLightbox(index);
+  card.innerHTML = `
+    <img src="images/${photo[0]}" alt="${photo[1]}">
+    <div class="caption">
+      ${photo[1]}
+      <span class="date">${photo[2]}</span>
+    </div>
+  `;
+  gallery.appendChild(card);
+});
+
+function setView(view, button) {
+  gallery.className = "gallery " + view;
+  document.querySelectorAll(".view-btn").forEach(btn => btn.classList.remove("active"));
+  button.classList.add("active");
+}
+
+function openLightbox(index) {
+  currentIndex = index;
+  updateLightbox();
+  document.getElementById("lightbox").classList.add("active");
+}
+
+function updateLightbox() {
+  const photo = photos[currentIndex];
+  document.getElementById("lightbox-img").src = "images/" + photo[0];
+  document.getElementById("lightbox-title").textContent = photo[1] + " — " + photo[2];
+}
+
+function changeImage(direction) {
+  currentIndex = (currentIndex + direction + photos.length) % photos.length;
+  updateLightbox();
+}
+
+function closeLightbox() {
+  document.getElementById("lightbox").classList.remove("active");
+}
+
+document.addEventListener("keydown", function(e) {
+  const lightboxOpen = document.getElementById("lightbox").classList.contains("active");
+  if (!lightboxOpen) return;
+
+  if (e.key === "ArrowRight") changeImage(1);
+  if (e.key === "ArrowLeft") changeImage(-1);
+  if (e.key === "Escape") closeLightbox();
+});
+</script>
+
+</body>
+</html>
